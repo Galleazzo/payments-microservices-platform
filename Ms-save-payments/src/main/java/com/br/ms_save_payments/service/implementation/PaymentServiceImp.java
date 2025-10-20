@@ -4,6 +4,7 @@ import com.br.ms_save_payments.domain.entity.Payment;
 import com.br.ms_save_payments.domain.entity.dto.PaymentDTO;
 import com.br.ms_save_payments.domain.entity.enums.PaymentStatus;
 import com.br.ms_save_payments.exception.BusinessException;
+import com.br.ms_save_payments.producer.PaymentProcucerEvent;
 import com.br.ms_save_payments.repository.PaymentRepository;
 import com.br.ms_save_payments.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +18,11 @@ import java.util.List;
 public class PaymentServiceImp implements PaymentService {
 
     private PaymentRepository paymentRepository;
+    private PaymentProcucerEvent procucerEvent;
 
-    public PaymentServiceImp(@Autowired PaymentRepository paymentRepository) {
+    public PaymentServiceImp(@Autowired PaymentRepository paymentRepository, @Autowired PaymentProcucerEvent procucerEvent) {
         this.paymentRepository = paymentRepository;
+        this.procucerEvent = procucerEvent;
     }
 
     @Override
@@ -61,6 +64,7 @@ public class PaymentServiceImp implements PaymentService {
         payment.setDescription(paymentDTO.description());
 
         Payment saved = paymentRepository.save(payment);
+        this.procucerEvent.sendMessage(saved);
 
         return new PaymentDTO(
                 saved.getPaymentId(),
